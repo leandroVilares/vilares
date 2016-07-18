@@ -1,0 +1,45 @@
+---
+spring:
+  profiles: common
+
+server:
+  error:
+    whitelabel.enabled: true
+
+logging:
+  level:
+    com.ml.logistica.romaneio: DEBUG
+
+ml.logistica.api.romaneio:
+  service:
+    authToken: "##ZjYxY2FiZmJjMDRhN2I2YjJmMmExNjE3##"
+    baseUrl: api/v1/packingLists
+  packingListDAO:
+    findTraditionalPackingListSQL: "classpath:/dao/packingList/findTraditionalPackingList.sql"
+    findCourrierPackingListSQL: "classpath:/dao/packingList/findCourrierPackingList.sql"
+
+---
+
+spring:
+  profiles: oracle-dev
+  datasource:
+    driver-class-name: "oracle.jdbc.OracleDriver"
+    url: "jdbc:oracle:thin:@//10.0.0.190:1800/MLDDB"
+    initialization-fail-fast: true
+    username: "gemco"
+    password: "gemco"
+
+---
+
+spring:
+  profiles: h2
+  datasource:
+    platform: h2
+    initialize: true
+    url: jdbc:h2:mem:testdb;Mode=Oracle;DB_CLOSE_ON_EXIT=FALSE
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+
+

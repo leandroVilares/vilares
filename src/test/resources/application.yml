@@ -1,0 +1,39 @@
+spring:
+  profiles:
+    include: common,h2
+
+logging:
+  level:
+    com.ml.logistica.romaneio: DEBUG
+
+---
+spring:
+  profiles: common
+
+server:
+  error:
+    whitelabel.enabled: true
+
+ml.logistica.api.romaneio:
+  service:
+    authToken: "##ZjYxY2FiZmJjMDRhN2I2YjJmMmExNjE3##"
+    baseUrl: api/v1/packingLists
+  packingListDAO:
+    findTraditionalPackingListSQL: "classpath:/dao/packingList/findTraditionalPackingList.sql"
+    findCourrierPackingListSQL: "classpath:/dao/packingList/findCourrierPackingList.sql"
+
+---
+
+spring:
+  profiles: h2
+  datasource:
+    platform: h2
+    initialize: true
+    url: jdbc:h2:mem:testdb;Mode=Oracle;DB_CLOSE_ON_EXIT=FALSE
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+
+
+    
