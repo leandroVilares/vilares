@@ -43,3 +43,13 @@ spring:
       path: /h2-console
 
 
+---
+
+spring:
+  profiles: oracle-hml
+  datasource:
+    driver-class-name: "oracle.jdbc.OracleDriver"
+    url: "jdbc:oracle:thin:@//10.0.0.190:1800/MLDDB"
+    initialization-fail-fast: true
+    username: "API_ROMANEIO"
+    password: "5$9fb4e4(4"
