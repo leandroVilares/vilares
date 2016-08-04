@@ -18,9 +18,11 @@ ml.logistica.api.romaneio:
   service:
     authToken: "##ZjYxY2FiZmJjMDRhN2I2YjJmMmExNjE3##"
     baseUrl: api/v1/packingLists
-  packingListDAO:
-    findTraditionalPackingListSQL: "classpath:/dao/packingList/findTraditionalPackingList.sql"
-    findCourrierPackingListSQL: "classpath:/dao/packingList/findCourrierPackingList.sql"
+
+  packingList:
+    traditionalSQL: "classpath:/dao/packingList/1-traditional.sql"
+    courrierSQL: "classpath:/dao/packingList/2-courrier.sql"
+    luizagolSQL: "classpath:/dao/packingList/3-luizagol.sql"
 
 ---
 

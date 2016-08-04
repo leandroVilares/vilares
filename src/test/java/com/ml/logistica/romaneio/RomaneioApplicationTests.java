@@ -63,7 +63,7 @@ public class RomaneioApplicationTests {
 		Assert.assertTrue(response.getStatusCode().equals(HttpStatus.OK));
 		response = rest.exchange(serviceURL + "?branch.id=991&id=812086", HttpMethod.GET, request, Object.class);
 		Assert.assertTrue(response.getStatusCode().equals(HttpStatus.OK));
-		// Courrier
+		// COURRIER
 		response = rest.exchange(serviceURL + "?type.id=2&branch.id=991&id=812086", HttpMethod.GET, request, Object.class);
 		Assert.assertTrue(response.getStatusCode().equals(HttpStatus.OK));
 

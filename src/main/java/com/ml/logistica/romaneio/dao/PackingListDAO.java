@@ -1,19 +1,6 @@
 package com.ml.logistica.romaneio.dao;
 
-import java.io.IOException;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
-
-import javax.annotation.PostConstruct;
-
-import org.apache.commons.collections.CollectionUtils;
+import com.ml.logistica.romaneio.entity.*;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -23,180 +10,219 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
-import org.springframework.dao.DataAccessException;
-import org.springframework.jdbc.core.ResultSetExtractor;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
 
-import com.ml.logistica.romaneio.entity.Branch;
-import com.ml.logistica.romaneio.entity.Order;
-import com.ml.logistica.romaneio.entity.PackingList;
-import com.ml.logistica.romaneio.entity.PackingListDetail;
-import com.ml.logistica.romaneio.entity.PackingListType;
+import javax.annotation.PostConstruct;
+import java.io.IOException;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Repository
 @Configuration
-@ConfigurationProperties(prefix = "ml.logistica.api.romaneio.packingListDAO")
+@ConfigurationProperties(prefix = "ml.logistica.api.romaneio.packingList")
 public class PackingListDAO {
 
-	private static Logger logger = LoggerFactory.getLogger(PackingListDAO.class);
+    private static Logger logger = LoggerFactory.getLogger(PackingListDAO.class);
+    @Autowired
+    private NamedParameterJdbcTemplate template;
+    @Autowired
+    private ResourceLoader resourceLoader;
 
-	@Autowired
-	private NamedParameterJdbcTemplate template;
+    private List<QueryData> queries;
 
-	@Autowired
-	private ResourceLoader resourceLoader;
+    public List<PackingList> findPackingList(PackingListFilter filter, Long packingListTypeId) {
 
-	private String findTraditionalPackingListSQL;
+        final List<PackingList> result = new ArrayList<>();
+        if (packingListTypeId == null) {
+            queries.forEach(query -> {
+                Optional.ofNullable(findPackingList(query.getQuery(), filter)).ifPresent(list -> result.addAll(list));
+            });
+        } else {
+            result.addAll(findPackingList(getQueryById(packingListTypeId).getQuery(), filter));
+        }
 
-	private String findCourrierPackingListSQL;
+        return result;
 
-	@PostConstruct
-	public void postConstruct() {
-		findTraditionalPackingListSQL = StringUtils.trimToEmpty(findTraditionalPackingListSQL);
-		findCourrierPackingListSQL = StringUtils.trimToEmpty(findCourrierPackingListSQL);
+    }
 
-		if (findTraditionalPackingListSQL.startsWith("classpath:")) {
-			findTraditionalPackingListSQL = loadQueries(findTraditionalPackingListSQL);
-		}
-		if (findCourrierPackingListSQL.startsWith("classpath:")) {
-			findCourrierPackingListSQL = loadQueries(findCourrierPackingListSQL);
-		}
+    public PackingList getPackingList(Long branch, Long id) {
+        return getPackingList(branch, id, null);
+    }
 
-	}
+    public PackingList getPackingList(Long branch, Long id, Long type) {
+        PackingListFilter filter = new PackingListFilter();
+        filter.setId(id);
+        filter.setBranch(branch);
 
-	private String loadQueries(String path) {
-		try {
-			Resource queryResource = resourceLoader.getResource(path);
-			return IOUtils.readLines(queryResource.getInputStream()).stream().filter(line -> {
-				return !line.matches("^\\s*--.*?");
-			}).collect(Collectors.joining("\n"));
-		} catch (IOException e) {
-			throw new RuntimeException(e);
-		}
-	}
+        if (Optional.ofNullable(type).isPresent()) {
+            return findPackingList(getQueryById(type).getQuery(), filter).stream().findFirst().orElse(null);
+        } else {
+            for (QueryData qd : queries) {
+                PackingList pl = findPackingList(getQueryById(qd.getId()).getQuery(), filter).stream().findFirst().orElse(null);
+                if (pl != null) {
+                    return pl;
+                }
+            }
+            return null;
+        }
 
-	private List<PackingList> findPackingList(String sql, PackingListFilter filter) {
-		Map<String, Object> params = new HashMap<>();
-		params.put("NROMANEIO", filter.getId());
-		params.put("CODFIL", filter.getBranch());
-		params.put("START_DATE", filter.getStartDate());
-		params.put("END_DATE", filter.getEndDate());
+    }
 
-		sql = parseQueryParameters(sql, params);
-		logger.debug("Executing query:\n\n" + sql + "\n\nWith parameters: " + filter);
-		return template.query(sql, params, new ResultSetExtractor<List<PackingList>>() {
-			@Override
-			public List<PackingList> extractData(ResultSet rs) throws SQLException, DataAccessException {
-				List<PackingList> result = new ArrayList<>();
+    private List<PackingList> findPackingList(String sql, PackingListFilter filter) {
+        Map<String, Object> params = new HashMap<>();
+        params.put("NROMANEIO", filter.getId());
+        params.put("CODFIL", filter.getBranch());
+        params.put("START_DATE", filter.getStartDate());
+        params.put("END_DATE", filter.getEndDate());
 
-				PackingList pl = null;
+        sql = parseQueryParameters(sql, params);
+        logger.debug("Executing query:\n\n" + sql + "\n\nWith parameters: " + filter);
+        return template.query(sql, params, rs -> {
+            List<PackingList> result = new ArrayList<>();
 
-				while (rs.next()) {
-					Long nromaneio = rs.getLong("NROMANEIO");
-					// Se mudar o romaneio, iniciamos um novo.
-					if (pl == null || !pl.getId().equals(nromaneio)) {
-						pl = new PackingList();
-						result.add(pl);
+            PackingList pl = null;
 
-						pl.setId(nromaneio);
-						pl.setBranch(new Branch(rs.getLong("CODFIL")));
-						String type = rs.getString("TIPO");
-						if (StringUtils.trimToNull(type) != null) {
-							pl.setType(PackingListType.valueOf(rs.getString("TIPO")));
-						}
-						Date date = rs.getDate("DATA_ROMANEIO");
-						if (date != null) {
-							Calendar cal = Calendar.getInstance();
-							cal.setTime(rs.getDate("DATA_ROMANEIO"));
-							pl.setCreatedAt(cal);
-						}
-					}
-					// Adicionamos os detalhes do romaneio
-					PackingListDetail plDetail = new PackingListDetail();
-					pl.getDetails().add(plDetail);
-					plDetail.setOrder(new Order(rs.getLong("NUMPEDVEN")));
-					plDetail.setBatch(rs.getLong("NLOTE"));
-					// --
+            while (rs.next()) {
+                Long nromaneio = rs.getLong("NROMANEIO");
+                // Se mudar o romaneio, iniciamos um novo.
+                if (pl == null || !pl.getId().equals(nromaneio)) {
+                    pl = new PackingList();
+                    result.add(pl);
 
-				}
-				logger.debug("The query returned " + (result == null ? 0 : result.size()) + " iten(s)");
-				return result;
-			}
-		});
-	}
+                    pl.setId(nromaneio);
+                    pl.setBranch(new Branch(rs.getLong("CODFIL")));
+                    String type = rs.getString("TIPO");
+                    if (StringUtils.trimToNull(type) != null) {
+                        pl.setType(getQueryByName(rs.getString("TIPO")).toPackingListType());
+                    }
+                    Date date = rs.getDate("DATA_ROMANEIO");
+                    if (date != null) {
+                        Calendar cal = Calendar.getInstance();
+                        cal.setTime(rs.getDate("DATA_ROMANEIO"));
+                        pl.setCreatedAt(cal);
+                    }
+                }
+                // Adicionamos os detalhes do romaneio
+                PackingListDetail plDetail = new PackingListDetail();
+                pl.getDetails().add(plDetail);
+                plDetail.setOrder(new Order(rs.getLong("NUMPEDVEN")));
+                plDetail.setBatch(rs.getLong("NLOTE"));
+                // --
 
-	public List<PackingList> findTraditionalPackingList(PackingListFilter filter) {
-		return findPackingList(findTraditionalPackingListSQL, filter);
-	}
+            }
+            logger.debug("The query returned " + (result == null ? 0 : result.size()) + " iten(s)");
+            return result;
+        });
+    }
 
-	public NamedParameterJdbcTemplate getTemplate() {
-		return template;
-	}
+    public QueryData getQueryById(Long typeId) {
+        return queries.stream().filter(qd -> qd.getId().equals(typeId)).findFirst().orElse(null);
+    }
 
-	public void setTemplate(NamedParameterJdbcTemplate template) {
-		this.template = template;
-	}
+    private String parseQueryParameters(String sql, Map<String, ?> params) {
+        String result = sql;
 
-	public PackingList getPackingList(Long branch, Long id) {
-		return getPackingList(branch, id, null);
-	}
+        for (String k : params.keySet()) {
+            Object v = params.get(k);
+            if (v == null) {
+                result = result.replaceAll("\\[\\s*:" + k + "\\s*\\]\\s*\\[.*?\\];", "");
+            } else {
+                result = result.replaceAll("\\[\\s*:" + k + "\\s*\\]\\s*\\[(.*?)\\];", "$1");
+            }
+        }
 
-	public PackingList getPackingList(Long branch, Long id, PackingListType type) {
-		PackingListFilter filter = new PackingListFilter();
-		filter.setId(id);
-		filter.setBranch(branch);
-		List<PackingList> result = null;
-		if (type == null || PackingListType.Traditional.equals(type)) {
-			result = findTraditionalPackingList(filter);
-		}
-		if ((type == null && CollectionUtils.isEmpty(result)) || PackingListType.Courrier.equals(type)) {
-			result = findCourrierPackingList(filter);
-		}
-		return CollectionUtils.isNotEmpty(result) ? result.get(0) : null;
-	}
+        return result;
+    }
 
-	private String parseQueryParameters(String sql, Map<String, ?> params) {
-		String result = sql;
+    public QueryData getQueryByName(String name) {
+        return queries.stream().filter(qd -> qd.getName().equals(name)).findFirst().orElse(null);
+    }
 
-		for (String k : params.keySet()) {
-			Object v = params.get(k);
-			if (v == null) {
-				result = result.replaceAll("\\[\\s*:" + k + "\\s*\\]\\s*\\[.*?\\];", "");
-			} else {
-				result = result.replaceAll("\\[\\s*:" + k + "\\s*\\]\\s*\\[(.*?)\\];", "$1");
-			}
-		}
+    public List<QueryData> getQueries() {
+        return queries;
+    }
 
-		return result;
-	}
+    public void setQueries(List<QueryData> queries) {
+        this.queries = queries;
+    }
 
-	public List<PackingList> findCourrierPackingList(PackingListFilter filter) {
-		return findPackingList(findCourrierPackingListSQL, filter);
-	}
+    public ResourceLoader getResourceLoader() {
+        return resourceLoader;
+    }
 
-	public ResourceLoader getResourceLoader() {
-		return resourceLoader;
-	}
+    public void setResourceLoader(ResourceLoader resourceLoader) {
+        this.resourceLoader = resourceLoader;
+    }
 
-	public void setResourceLoader(ResourceLoader resourceLoader) {
-		this.resourceLoader = resourceLoader;
-	}
+    public NamedParameterJdbcTemplate getTemplate() {
+        return template;
+    }
 
-	public String getFindTraditionalPackingListSQL() {
-		return findTraditionalPackingListSQL;
-	}
+    public void setTemplate(NamedParameterJdbcTemplate template) {
+        this.template = template;
+    }
 
-	public void setFindTraditionalPackingListSQL(String findTraditionalPackingListSQL) {
-		this.findTraditionalPackingListSQL = findTraditionalPackingListSQL;
-	}
+    @PostConstruct
+    public void postConstruct() {
 
-	public String getFindCourrierPackingListSQL() {
-		return findCourrierPackingListSQL;
-	}
+        if (queries != null) {
+            queries.forEach(qData -> {
+                qData.setQuery(loadQueries(qData.getQuery()));
+            });
+        }
 
-	public void setFindCourrierPackingListSQL(String findCourrierPackingListSQL) {
-		this.findCourrierPackingListSQL = findCourrierPackingListSQL;
-	}
+    }
+
+    private String loadQueries(String query) {
+        query = StringUtils.trimToEmpty(query);
+        if (query.startsWith("classpath:")) {
+            try {
+                Resource queryResource = resourceLoader.getResource(query);
+                return IOUtils.readLines(queryResource.getInputStream()).stream()
+                        .filter(line -> !line.matches("^\\s*--.*?"))
+                        .collect(Collectors.joining("\n"));
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        } else {
+            return query;
+        }
+    }
+
+    public static class QueryData {
+        private Long id;
+        private String name;
+        private String query;
+
+        public String getQuery() {
+            return query;
+        }
+
+        public void setQuery(String query) {
+            this.query = query;
+        }
+
+        public PackingListType toPackingListType() {
+            return PackingListType.newBuilder().id(getId()).name(getName()).build();
+        }
+
+        public Long getId() {
+            return id;
+        }
+
+        public void setId(Long id) {
+            this.id = id;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public void setName(String name) {
+            this.name = name;
+        }
+    }
 
 }
+

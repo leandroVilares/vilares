@@ -1,72 +1,61 @@
 package com.ml.logistica.romaneio.entity;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.function.Predicate;
-import java.util.stream.Collectors;
-
-import org.apache.commons.lang3.StringUtils;
-
 public class PackingListType {
-	private Long id;
-	private String name;
 
-	private static List<PackingListType> instances;
+    private Long id;
+    private String name;
 
-	public static PackingListType Traditional;
-	public static PackingListType Courrier;
+    private PackingListType(Builder builder) {
+        setId(builder.id);
+        setName(builder.name);
+    }
 
-	static {
-		Traditional = new PackingListType(1l, "Traditional");
-		Courrier = new PackingListType(2l, "Courrier");
-		instances = Arrays.asList(new PackingListType[] { Traditional, Courrier });
-	}
+    public static Builder newBuilder() {
+        return new Builder();
+    }
 
-	private PackingListType(Long id, String name) {
-		this.id = id;
-		this.name = name;
-	}
+    public static Builder newBuilder(PackingListType copy) {
+        Builder builder = new Builder();
+        builder.id = copy.id;
+        builder.name = copy.name;
+        return builder;
+    }
 
-	public Long getId() {
-		return id;
-	}
+    public Long getId() {
+        return id;
+    }
 
-	public void setId(Long id) {
-		this.id = id;
-	}
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-	public String getName() {
-		return name;
-	}
+    public String getName() {
+        return name;
+    }
 
-	public void setName(String name) {
-		this.name = name;
-	}
+    public void setName(String name) {
+        this.name = name;
+    }
 
-	private static PackingListType getInstance(Predicate<PackingListType> predicate) {
-		List<PackingListType> l = instances.stream().filter(predicate).collect(Collectors.toList());
-		if (l != null && l.size() > 0) {
-			return l.get(0);
-		}
-		return null;
-	}
+    public static final class Builder {
+        private Long id;
+        private String name;
 
-	public static PackingListType valueOf(String name) {
-		if (StringUtils.isBlank(name)) {
-			return null;
-		}
-		return getInstance(p -> {
-			return name.equals(p.getName());
-		});
-	}
+        private Builder() {
+        }
 
-	public static PackingListType valueOf(Long id) {
-		if (id == null || id.longValue() <= 0) {
-			return null;
-		}
-		return getInstance(p -> {
-			return id.longValue() == p.getId().longValue();
-		});
-	}
+        public Builder id(Long val) {
+            id = val;
+            return this;
+        }
 
+        public Builder name(String val) {
+            name = val;
+            return this;
+        }
+
+        public PackingListType build() {
+            return new PackingListType(this);
+        }
+    }
 }

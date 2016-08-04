@@ -1,0 +1,8 @@
+---
+spring:
+  profiles:
+    include: common,oracle-dev
+
+logging:
+  level:
+    com.ml.logistica.romaneio: DEBUG
