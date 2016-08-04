@@ -1,0 +1,19 @@
+---
+spring:
+  profiles:
+    include: common,oracle-hml
+
+logging:
+  level:
+    com.ml.logistica.romaneio: DEBUG
+
+---
+
+spring:
+  profiles: oracle-hml
+  datasource:
+    driver-class-name: "oracle.jdbc.OracleDriver"
+    url: "jdbc:oracle:thin:@//10.0.0.190:7000/MLHDB"
+    initialization-fail-fast: true
+    username: "API_ROMANEIO"
+    password: "5$9fb4e4(4"

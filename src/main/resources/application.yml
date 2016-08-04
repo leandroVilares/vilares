@@ -1,3 +1,4 @@
+
 ---
 spring:
   profiles: common
@@ -15,22 +16,12 @@ ml.logistica.api.romaneio:
     authToken: "##ZjYxY2FiZmJjMDRhN2I2YjJmMmExNjE3##"
     baseUrl: api/v1/packingLists
 
+
   packingList:
     queries:
       - { id: 1, name: "Traditional", query: "classpath:/dao/packingList/1-traditional.sql"}
       - { id: 2, name: "Courrier", query: "classpath:/dao/packingList/2-courrier.sql"}
       - { id: 3, name: "LuizaGol", query: "classpath:/dao/packingList/3-luizagol.sql"}
-
----
-
-spring:
-  profiles: oracle-dev
-  datasource:
-    driver-class-name: "oracle.jdbc.OracleDriver"
-    url: "jdbc:oracle:thin:@//10.0.0.190:1800/MLDDB"
-    initialization-fail-fast: true
-    username: "gemco"
-    password: "gemco"
 
 ---
 
@@ -44,15 +35,3 @@ spring:
     console:
       enabled: true
       path: /h2-console
-
-
----
-
-spring:
-  profiles: oracle-hml
-  datasource:
-    driver-class-name: "oracle.jdbc.OracleDriver"
-    url: "jdbc:oracle:thin:@//10.0.0.190:7000/MLHDB"
-    initialization-fail-fast: true
-    username: "API_ROMANEIO"
-    password: "5$9fb4e4(4"

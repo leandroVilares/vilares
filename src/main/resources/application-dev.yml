@@ -1,0 +1,19 @@
+---
+spring:
+  profiles:
+    include: common,oracle-dev
+
+logging:
+  level:
+    com.ml.logistica.romaneio: DEBUG
+
+---
+
+spring:
+  profiles: oracle-dev
+  datasource:
+    driver-class-name: "oracle.jdbc.OracleDriver"
+    url: "jdbc:oracle:thin:@//10.0.0.190:1800/MLDDB"
+    initialization-fail-fast: true
+    username: "gemco"
+    password: "gemco"

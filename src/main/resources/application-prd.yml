@@ -1,0 +1,8 @@
+---
+spring:
+  profiles:
+    include: common,oracle-prd
+
+logging:
+  level:
+    com.ml.logistica.romaneio: INFO

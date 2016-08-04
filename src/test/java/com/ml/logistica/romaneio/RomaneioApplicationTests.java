@@ -1,29 +1,26 @@
 package com.ml.logistica.romaneio;
 
-import java.io.IOException;
-
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.test.IntegrationTest;
 import org.springframework.boot.test.SpringApplicationConfiguration;
-import org.springframework.context.annotation.Profile;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.http.client.ClientHttpResponse;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.web.client.ResponseErrorHandler;
 import org.springframework.web.client.RestTemplate;
 
-@Profile({"test" })
-@RunWith(SpringJUnit4ClassRunner.class)
+import java.io.IOException;
+
+
 @IntegrationTest
 @WebAppConfiguration
+@ActiveProfiles("common,h2")
+@RunWith(SpringJUnit4ClassRunner.class)
 @SpringApplicationConfiguration(classes = RomaneioApplication.class)
 @ConfigurationProperties(prefix = "ml.logistica.api.romaneio.service")
 public class RomaneioApplicationTests {
