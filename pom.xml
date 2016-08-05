@@ -6,7 +6,7 @@
     <groupId>com.ml.logistica.romaneio</groupId>
     <artifactId>Romaneio</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <packaging>jar</packaging>
+    <packaging>war</packaging>
 
     <name>Romaneio</name>
     <description>Romaneio Project</description>
@@ -207,7 +207,7 @@
                         <resource>
                             <targetPath>/</targetPath>
                             <directory>${project.build.directory}</directory>
-                            <include>${project.build.finalName}.jar</include>
+                            <include>${project.build.finalName}.war</include>
                         </resource>
                     </resources>
                 </configuration>
