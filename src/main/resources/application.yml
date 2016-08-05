@@ -1,4 +1,6 @@
-
+spring:
+  profiles:
+        active: #spring.profiles.active#
 ---
 spring:
   profiles: common
@@ -6,6 +8,7 @@ spring:
 server:
   error:
     whitelabel.enabled: true
+  port: 8080
 
 logging:
   level:
