@@ -135,6 +135,7 @@
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <configuration>
                     <mainClass>com.ml.logistica.romaneio.RomaneioApplication</mainClass>
+                    <executable>true</executable>
                 </configuration>
                 <executions>
                     <execution>
