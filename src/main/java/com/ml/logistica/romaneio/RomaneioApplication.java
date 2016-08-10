@@ -14,7 +14,6 @@ import java.net.UnknownHostException;
 public class RomaneioApplication {
 
     private static final Logger log = LoggerFactory.getLogger(RomaneioApplication.class);
-
     @Inject
     private Environment env;
 
@@ -29,5 +28,13 @@ public class RomaneioApplication {
                 env.getProperty("server.port"),
                 InetAddress.getLocalHost().getHostAddress(),
                 env.getProperty("server.port"));
+    }
+
+    public Environment getEnv() {
+        return env;
+    }
+
+    public void setEnv(Environment env) {
+        this.env = env;
     }
 }

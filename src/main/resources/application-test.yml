@@ -1,8 +1,12 @@
 ---
 spring:
   profiles:
-    include: common,oracle-dev
+    include: common,h2
+
+server:
+  port: 1081
 
 logging:
   level:
     com.ml.logistica.romaneio: DEBUG
+
