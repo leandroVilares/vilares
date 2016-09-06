@@ -100,7 +100,7 @@
     <build>
 
         <defaultGoal>clean install</defaultGoal>
-        <finalName>Romaneio-${project.version}.war</finalName>
+        <finalName>Romaneio-${project.version}</finalName>
 
         <plugins>
 
