@@ -46,29 +46,6 @@ public class PackingListDAO {
 
     }
 
-    public PackingList getPackingList(Long branch, Long id) {
-        return getPackingList(branch, id, null);
-    }
-
-    public PackingList getPackingList(Long branch, Long id, Long type) {
-        PackingListFilter filter = new PackingListFilter();
-        filter.setId(id);
-        filter.setBranch(branch);
-
-        if (Optional.ofNullable(type).isPresent()) {
-            return findPackingList(getQueryById(type).getQuery(), filter).stream().findFirst().orElse(null);
-        } else {
-            for (QueryData qd : queries) {
-                PackingList pl = findPackingList(getQueryById(qd.getId()).getQuery(), filter).stream().findFirst().orElse(null);
-                if (pl != null) {
-                    return pl;
-                }
-            }
-            return null;
-        }
-
-    }
-
     private List<PackingList> findPackingList(String sql, PackingListFilter filter) {
         Map<String, Object> params = new HashMap<>();
         params.put("NROMANEIO", filter.getId());
@@ -123,20 +100,48 @@ public class PackingListDAO {
     private String parseQueryParameters(String sql, Map<String, ?> params) {
         String result = sql;
 
+        List<String> paramsToRemove = new ArrayList<>();
+
         for (String k : params.keySet()) {
             Object v = params.get(k);
             if (v == null) {
                 result = result.replaceAll("\\[\\s*:" + k + "\\s*\\]\\s*\\[.*?\\];", "");
+                paramsToRemove.add(k);
             } else {
                 result = result.replaceAll("\\[\\s*:" + k + "\\s*\\]\\s*\\[(.*?)\\];", "$1");
             }
         }
+
+        paramsToRemove.forEach(params::remove);
 
         return result;
     }
 
     public QueryData getQueryByName(String name) {
         return queries.stream().filter(qd -> qd.getName().equals(name)).findFirst().orElse(null);
+    }
+
+    public PackingList getPackingList(Long branch, Long id) {
+        return getPackingList(branch, id, null);
+    }
+
+    public PackingList getPackingList(Long branch, Long id, Long type) {
+        PackingListFilter filter = new PackingListFilter();
+        filter.setId(id);
+        filter.setBranch(branch);
+
+        if (Optional.ofNullable(type).isPresent()) {
+            return findPackingList(getQueryById(type).getQuery(), filter).stream().findFirst().orElse(null);
+        } else {
+            for (QueryData qd : queries) {
+                PackingList pl = findPackingList(getQueryById(qd.getId()).getQuery(), filter).stream().findFirst().orElse(null);
+                if (pl != null) {
+                    return pl;
+                }
+            }
+            return null;
+        }
+
     }
 
     public List<QueryData> getQueries() {

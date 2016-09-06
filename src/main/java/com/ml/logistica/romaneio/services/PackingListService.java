@@ -37,7 +37,7 @@ public class PackingListService {
 
     private static final int MAX_DAIS_BETWEEN_DATES = 60;
     private static final int DEFAULT_DAYS_PERIOD = 2;
-    private static final String DATE_TIME_FORMAT = "yyyy-MM-dd hh:mm:ss";
+    private static final String DATE_TIME_FORMAT = "yyyy-MM-dd'T'hh:mm:ss";
 
     private static Logger logger = LoggerFactory.getLogger(PackingListService.class);
     private static int ERROR_COUNTER = 0;

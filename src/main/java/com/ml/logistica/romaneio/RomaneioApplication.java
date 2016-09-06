@@ -21,7 +21,7 @@ public class RomaneioApplication {
         SpringApplication app = new SpringApplication(RomaneioApplication.class);
         Environment env = app.run(args).getEnvironment();
         log.info("\n----------------------------------------------------------\n\t" +
-                        "Application '{}' is running! Access URLs:\n\t" +
+                        "Application is running! Access URLs:\n\t" +
                         "Local: \t\thttp://127.0.0.1:{}\n\t" +
                         "External: \thttp://{}:{}\n" +
                         "----------------------------------------------------------",

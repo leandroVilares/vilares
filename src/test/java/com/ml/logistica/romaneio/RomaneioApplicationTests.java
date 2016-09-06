@@ -43,7 +43,7 @@ public class RomaneioApplicationTests {
 
     @Test
     public void findCourrierByDate() {
-        response = rest.exchange(serviceURL + "?branch.id=991&createdat_greater=2016-05-19 00:00:00", HttpMethod.GET, request, Object.class);
+        response = rest.exchange(serviceURL + "?branch.id=991&createdat_greater=2016-05-19T00:00:00", HttpMethod.GET, request, Object.class);
         Assert.assertTrue(response.getStatusCode().equals(HttpStatus.OK));
     }
 
@@ -73,7 +73,7 @@ public class RomaneioApplicationTests {
 
 //    @Test
 //    public void findTraditionalByDate() {
-//        response = rest.exchange(serviceURL + "?type.id=1&branch.id=300&createdate_lesser=2016-05-10 00:00:00", HttpMethod.GET, request, Object.class);
+//        response = rest.exchange(serviceURL + "?type.id=1&branch.id=300&createdate_lesser=2016-05-10T00:00:00", HttpMethod.GET, request, Object.class);
 //        Assert.assertTrue(response.getStatusCode().equals(HttpStatus.OK));
 //    }
 
