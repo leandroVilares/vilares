@@ -15,6 +15,8 @@ import org.springframework.stereotype.Repository;
 
 import javax.annotation.PostConstruct;
 import java.io.IOException;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -36,7 +38,7 @@ public class PackingListDAO {
         final List<PackingList> result = new ArrayList<>();
         if (packingListTypeId == null) {
             queries.forEach(query -> {
-                Optional.ofNullable(findPackingList(query.getQuery(), filter)).ifPresent(list -> result.addAll(list));
+                Optional.ofNullable(findPackingList(query.getQuery(), filter)).ifPresent(result::addAll);
             });
         } else {
             result.addAll(findPackingList(getQueryById(packingListTypeId).getQuery(), filter));
@@ -60,37 +62,41 @@ public class PackingListDAO {
 
             PackingList pl = null;
 
-            while (rs.next()) {
-                Long nromaneio = rs.getLong("NROMANEIO");
-                // Se mudar o romaneio, iniciamos um novo.
-                if (pl == null || !pl.getId().equals(nromaneio)) {
-                    pl = new PackingList();
-                    result.add(pl);
-
-                    pl.setId(nromaneio);
-                    pl.setBranch(new Branch(rs.getLong("CODFIL")));
-                    String type = rs.getString("TIPO");
-                    if (StringUtils.trimToNull(type) != null) {
-                        pl.setType(getQueryByName(rs.getString("TIPO")).toPackingListType());
-                    }
-                    Date date = rs.getDate("DATA_ROMANEIO");
-                    if (date != null) {
-                        Calendar cal = Calendar.getInstance();
-                        cal.setTime(rs.getDate("DATA_ROMANEIO"));
-                        pl.setCreatedAt(cal);
-                    }
-                }
-                // Adicionamos os detalhes do romaneio
-                PackingListDetail plDetail = new PackingListDetail();
-                pl.getDetails().add(plDetail);
-                plDetail.setOrder(new Order(rs.getLong("NUMPEDVEN")));
-                plDetail.setBatch(rs.getLong("NLOTE"));
-                // --
-
-            }
+            buildRomaneioList(rs, result, pl);
             logger.debug("The query returned " + (result == null ? 0 : result.size()) + " iten(s)");
             return result;
         });
+    }
+
+    private void buildRomaneioList(ResultSet rs, List<PackingList> result, PackingList pl) throws SQLException {
+        while (rs.next()) {
+            Long nromaneio = rs.getLong("NROMANEIO");
+            // Se mudar o romaneio, iniciamos um novo.
+            if (pl == null || !pl.getId().equals(nromaneio)) {
+                pl = new PackingList();
+                result.add(pl);
+
+                pl.setId(nromaneio);
+                pl.setBranch(new Branch(rs.getLong("CODFIL")));
+                String type = rs.getString("TIPO");
+                if (StringUtils.trimToNull(type) != null) {
+                    pl.setType(getQueryByName(rs.getString("TIPO")).toPackingListType());
+                }
+                Date date = rs.getDate("DATA_ROMANEIO");
+                if (date != null) {
+                    Calendar cal = Calendar.getInstance();
+                    cal.setTime(rs.getDate("DATA_ROMANEIO"));
+                    pl.setCreatedAt(cal);
+                }
+            }
+            // Adicionamos os detalhes do romaneio
+            PackingListDetail plDetail = new PackingListDetail();
+            pl.getDetails().add(plDetail);
+            plDetail.setOrder(new Order(rs.getLong("NUMPEDVEN")));
+            plDetail.setBatch(rs.getLong("NLOTE"));
+            // --
+
+        }
     }
 
     public QueryData getQueryById(Long typeId) {
@@ -102,8 +108,9 @@ public class PackingListDAO {
 
         List<String> paramsToRemove = new ArrayList<>();
 
-        for (String k : params.keySet()) {
-            Object v = params.get(k);
+        for (Map.Entry<String, ?> es : params.entrySet()) {
+            String k = es.getKey();
+            Object v = es.getValue();
             if (v == null) {
                 result = result.replaceAll("\\[\\s*:" + k + "\\s*\\]\\s*\\[.*?\\];", "");
                 paramsToRemove.add(k);
@@ -172,9 +179,7 @@ public class PackingListDAO {
     public void postConstruct() {
 
         if (queries != null) {
-            queries.forEach(qData -> {
-                qData.setQuery(loadQueries(qData.getQuery()));
-            });
+            queries.forEach(qData -> qData.setQuery(loadQueries(qData.getQuery())));
         }
 
     }
@@ -188,7 +193,7 @@ public class PackingListDAO {
                         .filter(line -> !line.matches("^\\s*--.*?"))
                         .collect(Collectors.joining("\n"));
             } catch (IOException e) {
-                throw new RuntimeException(e);
+                throw new DaoException(e);
             }
         } else {
             return query;
